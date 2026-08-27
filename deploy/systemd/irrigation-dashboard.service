@@ -1,0 +1,39 @@
+[Unit]
+Description=Irrigation telemetry dashboard
+After=network-online.target local-fs.target
+Wants=network-online.target
+RequiresMountsFor=/var/lib/irrigation
+
+[Service]
+Type=simple
+User=irrigation
+Group=irrigation
+WorkingDirectory=/opt/irrigation-dashboard
+Environment=DASHBOARD_HOST=127.0.0.1
+Environment=DASHBOARD_PORT=8071
+Environment=IRRIGATION_DB=/var/lib/irrigation/irrigation.sqlite3
+Environment=IRRIGATION_MANAGEMENT_DIR=/var/lib/irrigation/management
+Environment=IRRIGATION_LOG=/var/lib/irrigation/irrigation.log
+EnvironmentFile=-/etc/irrigation-dashboard.env
+ExecStart=/usr/bin/node /opt/irrigation-dashboard/server.js
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=10s
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/irrigation
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictRealtime=true
+CapabilityBoundingSet=
+AmbientCapabilities=
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+[Install]
+WantedBy=multi-user.target

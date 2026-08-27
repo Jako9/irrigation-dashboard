@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Irrigation · Jako9</title>
+  <link rel="icon" href="/favicon.ico?v=20260818" sizes="any">
+  <link rel="icon" href="/icons/favicon-32.png?v=20260818" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="/icons/favicon-192.png?v=20260818" sizes="192x192">
+  <link rel="stylesheet" href="/vendor/uPlot.min.css">
+  <link rel="stylesheet" href="/app.css?v=structured-cycle-logs-v11">
+</head>
+<body>
+  <div class="backdrop"></div>
+  <main>
+    <nav class="account-nav" aria-label="Account">
+      <a id="admin-link" class="account-link" href="/admin/">Log in</a>
+      <span id="admin-identity" class="admin-identity hidden"></span>
+      <a id="logout-link" class="account-link hidden" href="/cdn-cgi/access/logout">Log out</a>
+    </nav>
+    <header class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">JAKO9 GARDEN SYSTEM</p>
+        <h1>Irrigation</h1>
+        <p id="updated" class="muted">Loading the latest garden reading…</p>
+      </div>
+      <div class="hero-actions">
+        <span id="freshness" class="status status-loading">Connecting</span>
+        <button id="refresh" type="button">Refresh</button>
+      </div>
+    </header>
+
+    <section id="error" class="error hidden" role="alert"></section>
+    <section id="admin-panel" class="admin-panel hidden" aria-label="Administration">
+      <div><p class="eyebrow">AUTHENTICATED ADMINISTRATION</p><h2>Controller management</h2></div>
+      <button id="open-management" class="primary" type="button">Open management</button>
+    </section>
+    <dialog id="management-dialog" class="management-dialog">
+      <div class="dialog-shell">
+        <header class="dialog-header"><div><p class="eyebrow">CONTROLLER MANAGEMENT</p><h2>Desired state</h2></div><button id="close-management" class="icon-button" type="button" aria-label="Close">&times;</button></header>
+        <nav class="management-tabs" aria-label="Management sections">
+          <button type="button" data-management-tab="config" class="active">ESP configuration <span id="config-count" class="tab-count hidden"></span></button>
+          <button type="button" data-management-tab="server">Server configuration</button>
+          <button type="button" data-management-tab="commands">Commands <span id="command-count" class="tab-count">0</span></button>
+          <button type="button" data-management-tab="firmware">Firmware</button>
+        </nav>
+        <section id="management-message" class="management-message hidden" role="status"></section>
+        <section id="management-config" class="management-view"></section>
+        <section id="management-server" class="management-view hidden"></section>
+        <section id="management-commands" class="management-view hidden"></section>
+        <section id="management-firmware" class="management-view hidden"></section>
+      </div>
+    </dialog>
+    <section id="summary" class="metric-grid" aria-label="Current conditions"></section>
+
+    <section class="section-heading">
+      <div><p class="eyebrow">LIVE ZONES</p><h2>Garden status</h2></div>
+      <p class="muted">Wetness compared with each zone’s watering threshold</p>
+    </section>
+    <section id="zones" class="zone-grid"></section>
+
+    <section class="history-panel">
+      <div class="section-heading controls-heading">
+        <div><p class="eyebrow">HISTORY</p><h2>Trends</h2></div>
+        <div class="controls">
+          <label>Zone<select id="zone"><option value="all">All zones</option></select></label>
+          <div id="ranges" class="range-group" aria-label="History range"></div>
+        </div>
+      </div>
+      <article class="chart-card"><h3>Soil wetness</h3><div id="wetness-chart" class="chart"></div></article>
+      <div class="chart-grid">
+        <article class="chart-card"><h3>Solar & load</h3><div id="power-chart" class="chart"></div></article>
+        <article class="chart-card"><h3>Temperature</h3><div id="temperature-chart" class="chart"></div></article>
+      </div>
+    </section>
+    <section class="log-panel">
+      <div class="section-heading">
+        <div><p class="eyebrow">CONTROLLER LOG</p><h2>Serial output</h2></div>
+        <p class="muted">Newest output appears at the bottom</p>
+      </div>
+      <div id="logs" class="logs" tabindex="0" role="log" aria-live="polite">Waiting for controller logs…</div>
+      <div class="log-actions"><button id="collapse-logs" type="button" disabled>Collapse all</button></div>
+    </section>
+    <footer id="footer-copy">Read-only telemetry · Times shown in Europe/Berlin</footer>
+  </main>
+  <script src="/vendor/uPlot.iife.min.js"></script>
+  <script src="/app.js?v=admin-backup-retention-v12"></script>
+</body>
+</html>

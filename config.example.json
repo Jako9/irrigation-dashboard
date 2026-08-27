@@ -1,0 +1,9 @@
+{
+  "timezone": "UTC",
+  "expectedIntervalMinutes": 60,
+  "defaultRange": "7d",
+  "zoneAliases": {
+    "1": "Greenhouse",
+    "2": "Herbs"
+  }
+}

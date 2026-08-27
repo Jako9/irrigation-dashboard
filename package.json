@@ -1,0 +1,17 @@
+{
+  "name": "irrigation-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Irrigation telemetry dashboard with protected management controls",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20.17.0"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js && node --check public/app.js"
+  },
+  "dependencies": {
+    "sqlite3": "6.0.1"
+  }
+}
