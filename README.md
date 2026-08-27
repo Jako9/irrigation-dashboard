@@ -54,8 +54,9 @@ Irrigation server ----> SQLite telemetry
 
 ### Requirements
 
-- Node.js 20.17 or newer
-- npm for a standalone installation
+- Node.js 18.20 or newer
+- Either npm for a standalone installation or a compatible distribution
+  package that provides the Node `sqlite3` module
 - An irrigation-server SQLite database
 - The server's management directory for admin functionality
 
@@ -66,6 +67,18 @@ npm ci
 cp config.example.json config.json
 cp access.env.example access.env
 ```
+
+On Debian-based systems, the distribution packages can be used instead of a
+repository-local `node_modules` directory:
+
+```bash
+sudo apt install nodejs node-sqlite3
+node -e "require('sqlite3')"
+```
+
+Choose one dependency method per host. When using the distribution module, do
+not run `npm ci`; confirm that `require('sqlite3')` succeeds with the same Node
+binary used by the service.
 
 Edit `config.json`:
 
@@ -131,6 +144,43 @@ The unit under `deploy/systemd/` is a generic hardened template. Adapt its user
 and paths, install the application under `/opt/irrigation-dashboard`, then
 validate the unit before starting it. See [docs/operations.md](docs/operations.md)
 for the complete checklist.
+
+For a Git-based deployment, clone into a stable path and point
+`WorkingDirectory` and `ExecStart` at that checkout. Keep the database,
+management files, logs, firmware, backups, and Access EnvironmentFile outside
+the checkout. If the checkout is below a home directory, use
+`ProtectHome=read-only` (or another setting that permits reading the checkout)
+instead of `ProtectHome=true`.
+
+Adapt `User`, `Group`, `RequiresMountsFor`, `ReadWritePaths`, and the private
+EnvironmentFile path before validating and enabling the unit. Enabling it makes
+the dashboard start automatically after reboot:
+
+```bash
+sudo systemd-analyze verify /etc/systemd/system/irrigation-dashboard.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now irrigation-dashboard.service
+systemctl is-enabled irrigation-dashboard.service
+systemctl is-active irrigation-dashboard.service
+```
+
+Start and verify the irrigation server before this dashboard. For updates,
+pull only fast-forward changes, refresh dependencies only when manifests
+changed, validate, and restart only the dashboard:
+
+```bash
+git pull --ff-only
+# npm ci --omit=dev              # npm-managed installations only
+node --check server.js
+node --check public/app.js
+sudo systemctl restart irrigation-dashboard.service
+curl --fail http://127.0.0.1:8071/healthz
+```
+
+A pull does not reload the running Node process. For rollback, check out the
+previously deployed commit, repeat the dependency and syntax checks, and
+restart only this service. Preserve the former checkout and private
+configuration until verification succeeds.
 
 ```bash
 npm run check

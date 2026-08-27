@@ -5,13 +5,13 @@
   "description": "Irrigation telemetry dashboard with protected management controls",
   "license": "UNLICENSED",
   "engines": {
-    "node": ">=20.17.0"
+    "node": ">=18.20.0"
   },
   "scripts": {
     "start": "node server.js",
     "check": "node --check server.js && node --check public/app.js"
   },
   "dependencies": {
-    "sqlite3": "6.0.1"
+    "sqlite3": "5.1.7"
   }
 }
