@@ -32,13 +32,24 @@ function logTime(entry, zone) {
 function groupLogCycles(entries) {
   const cycles = [];
   const occurrences = new Map();
+  let bootPreamble = [];
   for (const entry of entries) {
     if (/^Wake cause\b/i.test(entry.message.trim())) {
       const base = `${entry.timestamp_ms ?? 'null'}:${entry.clock_ms}:${entry.message}`;
       const occurrence = occurrences.get(base) || 0;
       occurrences.set(base, occurrence + 1);
-      cycles.push({ key: `${base}:${occurrence}`, entries: [entry] });
+      cycles.push({ key: `${base}:${occurrence}`, entries: [entry, ...bootPreamble] });
+      bootPreamble = [];
+    } else if (/^Persistent (?:clock restored|state initialized)\b/i.test(entry.message.trim())) {
+      // State restoration now happens before the wake-cause line so its timestamp
+      // is correct. Hold that boot preamble for the cycle it starts instead of
+      // displaying it as the final message of the preceding cycle.
+      bootPreamble.push(entry);
     } else if (cycles.length) {
+      // Do not discard an unexpected preamble if the firmware emits another line
+      // before its wake-cause marker.
+      cycles[cycles.length - 1].entries.push(...bootPreamble);
+      bootPreamble = [];
       cycles[cycles.length - 1].entries.push(entry);
     }
   }
