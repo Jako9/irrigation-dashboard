@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const sqlite3 = require('sqlite3');
+const { parseAmazonPrice } = require('./price-utils');
 
 const HOST = process.env.DASHBOARD_HOST || '127.0.0.1';
 const PORT = Number(process.env.DASHBOARD_PORT || 8071);
@@ -266,14 +267,40 @@ const ranges = Object.freeze({
 const staticFiles = Object.freeze({
   '/': ['index.html', 'text/html; charset=utf-8', 'no-cache'],
   '/index.html': ['index.html', 'text/html; charset=utf-8', 'no-cache'],
+  '/about': ['about.html', 'text/html; charset=utf-8', 'no-cache'],
+  '/about/': ['about.html', 'text/html; charset=utf-8', 'no-cache'],
+  '/build': ['build.html', 'text/html; charset=utf-8', 'no-cache'],
+  '/build/': ['build.html', 'text/html; charset=utf-8', 'no-cache'],
   '/app.css': ['app.css', 'text/css; charset=utf-8', 'no-cache'],
   '/app.js': ['app.js', 'text/javascript; charset=utf-8', 'no-cache'],
+  '/content.css': ['content.css', 'text/css; charset=utf-8', 'no-cache'],
+  '/build.js': ['build.js', 'text/javascript; charset=utf-8', 'no-cache'],
+  '/images/placeholder.svg': ['images/placeholder.svg', 'image/svg+xml; charset=utf-8', 'public, max-age=3600'],
   '/favicon.ico': ['favicon.ico', 'image/x-icon', 'public, max-age=31536000, immutable'],
   '/icons/favicon-32.png': ['icons/favicon-32.png', 'image/png', 'public, max-age=31536000, immutable'],
   '/icons/favicon-192.png': ['icons/favicon-192.png', 'image/png', 'public, max-age=31536000, immutable'],
   '/vendor/uPlot.iife.min.js': ['vendor/uPlot.iife.min.js', 'text/javascript; charset=utf-8', 'public, max-age=31536000, immutable'],
   '/vendor/uPlot.min.css': ['vendor/uPlot.min.css', 'text/css; charset=utf-8', 'public, max-age=31536000, immutable']
 });
+
+const AMAZON_PRICE_TTL_MS = 6 * 60 * 60_000;
+const AMAZON_MAX_HTML_BYTES = 2_500_000;
+const amazonProducts = Object.freeze({
+  esp32: 'https://www.amazon.de/dp/B0F65G3V81', antenna: 'https://www.amazon.de/dp/B0B9RTNBCT',
+  mux: 'https://www.amazon.de/dp/B09VXV67DQ', valve: 'https://www.amazon.de/dp/B08T6813QQ',
+  relay5: 'https://www.amazon.de/dp/B0CSJQZ89V', relay12: 'https://www.amazon.de/dp/B0CSJRZGLH',
+  sensors: 'https://www.amazon.de/dp/B0BTHL6M19', enclosure: 'https://www.amazon.de/dp/B0CYL4F3SL',
+  vents: 'https://www.amazon.de/dp/B0FY75CG4L', buck: 'https://www.amazon.de/dp/B0CLRSFL13',
+  fuses: 'https://www.amazon.de/dp/B078X977PK', wire: 'https://www.amazon.de/dp/B098JG9LCS',
+  cat5: 'https://www.amazon.de/dp/B0C8HTGXQY', heatshrink: 'https://www.amazon.de/dp/B0GDFGJRF8',
+  dupont: 'https://www.amazon.de/dp/B0FJXGCQ29', jst: 'https://www.amazon.de/dp/B0BZHR5NCR',
+  fasteners: 'https://www.amazon.de/dp/B0FXX66GZB', solarPanel: 'https://www.amazon.de/dp/B00UFY3Q0C',
+  solarController: 'https://www.amazon.de/dp/B0FFSRJDNW', battery: 'https://www.amazon.de/dp/B0BLCYPDKL',
+  solarCable: 'https://www.amazon.de/dp/B0CKWDNKP3', display: 'https://www.amazon.de/dp/B0B2DQXPVZ',
+  tpu: 'https://www.amazon.de/dp/B08X6P6YNC', epoxy: 'https://www.amazon.de/dp/B0B24W3P3H',
+  crimper: 'https://www.amazon.de/dp/B0873B5KHZ'
+});
+let amazonPriceCache = { expiresAt: 0, fetchedAt: null, items: null, pending: null };
 
 const db = new sqlite3.Database(DB_PATH, sqlite3.OPEN_READWRITE, (error) => {
   if (error) console.error('Database open failed:', error.message);
@@ -774,6 +801,76 @@ async function apiServerAdmin(req, res, url) {
   return json(res, 404, { error: 'Admin endpoint not found' }, { 'Cache-Control': 'no-store' });
 }
 
+async function readBoundedText(response, limit) {
+  const declared = Number(response.headers.get('content-length') || 0);
+  if (declared > limit) throw new Error('Price page was too large');
+  const reader = response.body.getReader();
+  const chunks = [];
+  let size = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > limit) { await reader.cancel(); throw new Error('Price page was too large'); }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(size);
+  let offset = 0;
+  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+  return new TextDecoder().decode(bytes);
+}
+
+async function fetchAmazonPrice(url) {
+  const parsed = new URL(url);
+  if (parsed.protocol !== 'https:' || !['amazon.de', 'www.amazon.de'].includes(parsed.hostname)) throw new Error('Price URL is not allowed');
+  const response = await fetch(url, {
+    redirect: 'follow', signal: AbortSignal.timeout(12_000),
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (compatible; Jako9IrrigationDashboard/1.0; +https://irrigation.jako9.com)',
+      'Accept-Language': 'de-DE,de;q=0.9,en;q=0.7', Accept: 'text/html,application/xhtml+xml'
+    }
+  });
+  if (!response.ok) throw new Error(`Amazon returned ${response.status}`);
+  const finalUrl = new URL(response.url);
+  if (!['amazon.de', 'www.amazon.de'].includes(finalUrl.hostname)) throw new Error('Unexpected price redirect');
+  const html = await readBoundedText(response, AMAZON_MAX_HTML_BYTES);
+  const unitPrice = parseAmazonPrice(html);
+  if (unitPrice === null) throw new Error('No verifiable EUR price');
+  return unitPrice;
+}
+
+async function refreshAmazonPrices() {
+  const entries = Object.entries(amazonProducts);
+  const items = {};
+  let cursor = 0;
+  async function worker() {
+    while (cursor < entries.length) {
+      const [id, url] = entries[cursor++];
+      try { items[id] = { status: 'available', unitPrice: await fetchAmazonPrice(url) }; }
+      catch { items[id] = { status: 'unavailable', unitPrice: null }; }
+    }
+  }
+  await Promise.all(Array.from({ length: 3 }, () => worker()));
+  const now = Date.now();
+  amazonPriceCache = { fetchedAt: new Date(now).toISOString(), expiresAt: now + AMAZON_PRICE_TTL_MS, items, pending: null };
+  return amazonPriceCache;
+}
+
+async function apiPartsPrices(res) {
+  const now = Date.now();
+  if (!amazonPriceCache.items || amazonPriceCache.expiresAt <= now) {
+    if (!amazonPriceCache.pending) amazonPriceCache.pending = refreshAmazonPrices().catch((error) => {
+      amazonPriceCache.pending = null;
+      throw error;
+    });
+    await amazonPriceCache.pending;
+  }
+  return json(res, 200, {
+    currency: 'EUR', fetchedAt: amazonPriceCache.fetchedAt,
+    expiresAt: new Date(amazonPriceCache.expiresAt).toISOString(), items: amazonPriceCache.items
+  }, { 'Cache-Control': 'public, max-age=300' });
+}
+
 function serveStatic(req, res, pathname) {
   const item = staticFiles[pathname];
   if (!item) return false;
@@ -815,6 +912,7 @@ const server = http.createServer(async (req, res) => {
     if (!['GET', 'HEAD'].includes(req.method)) return json(res, 405, { error: 'Method not allowed' }, { Allow: 'GET, HEAD', 'Cache-Control': 'no-store' });
     if (url.pathname === '/api/v1/dashboard') return await apiDashboard(req, res, url);
     if (url.pathname === '/api/v1/logs') return apiLogs(res);
+    if (url.pathname === '/api/v1/parts-prices') return await apiPartsPrices(res);
     if (url.pathname === '/healthz') {
       const version = await latestVersion();
       return json(res, 200, { status: 'ok', telemetryAgeMs: version ? Math.max(0, Date.now() - version.received_at_ms) : null }, { 'Cache-Control': 'no-store' });

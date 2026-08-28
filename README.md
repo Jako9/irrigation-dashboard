@@ -111,6 +111,13 @@ in the shell instead.
 Open `http://127.0.0.1:8071/` for the public dashboard. It loads on first open,
 range or zone changes, and manual refresh; it does not continuously poll.
 
+The public project pages are available at `/about/` and `/build/`. The build
+guide includes a best-effort cost estimator. The dashboard server retrieves
+prices only from its fixed Amazon.de product list, limits and validates the
+responses, and caches results in memory for six hours. Outbound HTTPS is
+required for live prices; unavailable or unverified prices are displayed as
+`N/A` and are never counted as zero in the known subtotal.
+
 Public endpoints:
 
 | Method | Path | Purpose |
@@ -118,6 +125,7 @@ Public endpoints:
 | `GET` | `/` | Dashboard UI |
 | `GET` | `/api/v1/dashboard?range=7d&zone=all` | Aggregated telemetry |
 | `GET` | `/api/v1/logs` | Sanitized controller logs |
+| `GET` | `/api/v1/parts-prices` | Cached best-effort EUR prices for guide parts |
 | `GET` | `/healthz` | Process and telemetry freshness check |
 
 The authenticated `/admin/` interface can update controller and display

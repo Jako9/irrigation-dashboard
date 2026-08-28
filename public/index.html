@@ -14,8 +14,10 @@
 <body>
   <div class="backdrop"></div>
   <main>
-    <nav class="account-nav" aria-label="Account">
-      <a id="admin-link" class="account-link" href="/admin/">Log in</a>
+    <nav class="account-nav site-dashboard-nav" aria-label="Primary">
+      <a class="dashboard-brand" href="/">JAKO9 GARDEN</a>
+      <div class="dashboard-links"><a class="account-link active" href="/">Dashboard</a><a class="account-link" href="/about/">About</a><a class="account-link" href="/build/">Build it yourself</a></div>
+      <a id="admin-link" class="account-link admin-login" href="/admin/">Log in</a>
       <span id="admin-identity" class="admin-identity hidden"></span>
       <a id="logout-link" class="account-link hidden" href="/cdn-cgi/access/logout">Log out</a>
     </nav>
@@ -82,7 +84,7 @@
       <div id="logs" class="logs" tabindex="0" role="log" aria-live="polite">Waiting for controller logs…</div>
       <div class="log-actions"><button id="collapse-logs" type="button" disabled>Collapse all</button></div>
     </section>
-    <footer id="footer-copy">Read-only telemetry · Times shown in Europe/Berlin</footer>
+    <footer><nav class="footer-links" aria-label="Project"><a href="/about/">About this project</a><a href="/build/">Build it yourself</a></nav><span id="footer-copy">Read-only telemetry · Times shown in Europe/Berlin</span></footer>
   </main>
   <script src="/vendor/uPlot.iife.min.js"></script>
   <script src="/app.js?v=cycle-boot-preamble-v13"></script>

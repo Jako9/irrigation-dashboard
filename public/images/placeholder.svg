@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
+  <title id="title">Image placeholder</title><desc id="desc">A temporary graphic to be replaced with project photography.</desc>
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#193c31"/><stop offset="1" stop-color="#0b1b16"/></linearGradient><pattern id="p" width="60" height="60" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="60" fill="#63d690" opacity=".045"/></pattern></defs>
+  <rect width="1200" height="800" fill="url(#g)"/><rect width="1200" height="800" fill="url(#p)"/><path d="M420 485l115-130 78 82 62-60 115 108H420z" fill="none" stroke="#63d690" stroke-width="12" stroke-linejoin="round"/><circle cx="690" cy="290" r="37" fill="none" stroke="#b9e76b" stroke-width="11"/><text x="600" y="580" fill="#9ab2a3" font-family="system-ui,sans-serif" font-size="30" text-anchor="middle" letter-spacing="5">IMAGE PLACEHOLDER</text>
+</svg>

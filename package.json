@@ -9,7 +9,7 @@
   },
   "scripts": {
     "start": "node server.js",
-    "check": "node --check server.js && node --check public/app.js"
+    "check": "node --check server.js && node --check price-utils.js && node --check public/app.js && node --check public/build.js && node --test"
   },
   "dependencies": {
     "sqlite3": "5.1.7"
