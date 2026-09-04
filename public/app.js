@@ -62,11 +62,19 @@ function median(values) {
   return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
 }
 
+function hasWakeCauseZero(cycle) {
+  return /^Wake cause\s*:\s*0\b/i.test(cycle.entries[0].message.trim());
+}
+
 function abnormalCycleReasons(cycles, index) {
   const cycle = cycles[index];
+  if (index === cycles.length - 1) return [];
   const reasons = [];
-  if (/^Wake cause\s*:\s*0\b/i.test(cycle.entries[0].message.trim())) reasons.push('wake cause 0');
-  const previousCounts = cycles.slice(Math.max(0, index - 10), index).map((item) => item.entries.length);
+  if (hasWakeCauseZero(cycle)) reasons.push('wake cause 0');
+  const previousCounts = cycles.slice(0, index)
+    .filter((item) => !hasWakeCauseZero(item))
+    .slice(-10)
+    .map((item) => item.entries.length);
   if (previousCounts.length) {
     const expectedCount = median(previousCounts);
     if (cycle.entries.length !== expectedCount) reasons.push(`message count differs from recent median (${expectedCount})`);
