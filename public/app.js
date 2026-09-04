@@ -56,6 +56,24 @@ function groupLogCycles(entries) {
   return cycles;
 }
 
+function median(values) {
+  const sorted = [...values].sort((a, b) => a - b);
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+}
+
+function abnormalCycleReasons(cycles, index) {
+  const cycle = cycles[index];
+  const reasons = [];
+  if (/^Wake cause\s*:\s*0\b/i.test(cycle.entries[0].message.trim())) reasons.push('wake cause 0');
+  const previousCounts = cycles.slice(Math.max(0, index - 10), index).map((item) => item.entries.length);
+  if (previousCounts.length) {
+    const expectedCount = median(previousCounts);
+    if (cycle.entries.length !== expectedCount) reasons.push(`message count differs from recent median (${expectedCount})`);
+  }
+  return reasons;
+}
+
 function renderLogs(entries, zone) {
   state.logEntries = Array.isArray(entries) ? entries : [];
   state.logTimezone = zone || 'Europe/Berlin';
@@ -70,14 +88,17 @@ function renderLogs(entries, zone) {
     placeholder.textContent = 'No controller logs have been received yet.';
     container.append(placeholder);
   }
-  for (const cycle of cycles) {
+  for (const [cycleIndex, cycle] of cycles.entries()) {
     const expanded = state.expandedCycles.has(cycle.key);
+    const abnormalReasons = abnormalCycleReasons(cycles, cycleIndex);
     const wrapper = document.createElement('section');
     wrapper.className = 'log-cycle';
     const detailsId = `log-cycle-${cycles.indexOf(cycle)}`;
     const summary = document.createElement('button');
     summary.type = 'button';
     summary.className = 'log-cycle-summary';
+    summary.classList.toggle('log-cycle-summary-abnormal', abnormalReasons.length > 0);
+    if (abnormalReasons.length) summary.title = `Abnormal cycle: ${abnormalReasons.join('; ')}`;
     summary.dataset.cycleKey = cycle.key;
     summary.setAttribute('aria-expanded', String(expanded));
     summary.setAttribute('aria-controls', detailsId);
