@@ -198,6 +198,7 @@ function validateRuntimeConfig(c) {
       integer('wet_raw', 0, 4095, sensor); integer('dry_raw', 0, 4095, sensor);
       if (sensor.wet_raw === sensor.dry_raw) fail(`${sensorKey} calibration endpoints must differ`);
     }
+    if (zone.wetness_balance !== undefined && (!Number.isFinite(zone.wetness_balance) || zone.wetness_balance < 0 || zone.wetness_balance > 1)) fail('wetness_balance must be from 0 to 1');
     if (!Number.isFinite(zone.watering_threshold) || zone.watering_threshold < 0 || zone.watering_threshold > 1) fail('watering_threshold must be from 0 to 1');
     if (typeof zone.enabled !== 'boolean') fail('enabled must be true or false');
     integer('watering_duration_s', 1, 86400, zone);

@@ -217,14 +217,15 @@ function configField(path, value, pendingPaths) {
   let input;
   if (typeof value === 'boolean') input = `<input data-config-path="${path}" type="checkbox" ${value ? 'checked' : ''} ${disabled ? 'disabled' : ''}>`;
   else if (typeof value === 'number') {
-    const step = key.includes('latitude') || key.includes('longitude') ? '0.000001' : key === 'watering_threshold' ? '0.01' : '1';
-    input = `<input data-config-path="${path}" type="number" step="${step}" value="${value}" ${disabled ? 'disabled' : ''}>`;
+    const step = key.includes('latitude') || key.includes('longitude') ? '0.000001' : ['watering_threshold', 'wetness_balance'].includes(key) ? '0.01' : '1';
+    input = `<input data-config-path="${path}" type="number" step="${step}" ${['watering_threshold', 'wetness_balance'].includes(key) ? 'min="0" max="1"' : ''} value="${value}" ${disabled ? 'disabled' : ''}>`;
   } else input = `<input data-config-path="${path}" type="text" value="${escapeHtml(value)}" ${disabled ? 'disabled' : ''}>`;
-  return `<label class="config-field${pending ? ' pending' : ''}" data-field-path="${path}"><span>${prettyLabel(key)}</span>${input}<small>${pending ? 'Awaiting controller download' : '&nbsp;'}</small></label>`;
+  return `<label class="config-field${pending ? ' pending' : ''}" data-field-path="${path}"><span>${prettyLabel(key)}</span>${input}<small>${pending ? 'Awaiting controller download' : key === 'wetness_balance' ? '0 = driest; 0.5 = average; 1 = wettest' : key === 'watering_threshold' ? 'Minimum; temperature adds up to 20 percentage points' : '&nbsp;'}</small></label>`;
 }
 
 function renderConfig() {
   const m = state.management; const c = state.configDraft; if (!m || !c) return;
+  c.zones.forEach((zone) => { if (zone.wetness_balance === undefined) zone.wetness_balance = [1, 4].includes(zone.zone) ? 0.8 : 0.5; });
   const pending = new Set(m.changedConfigPaths.map(dotPath));
   const globals = Object.keys(c).filter((key) => !['weather','zones'].includes(key));
   $('#management-config').innerHTML = `<div class="management-summary"><div><strong>${pending.size ? `${pending.size} changed parameter${pending.size === 1 ? '' : 's'}` : 'Configuration is current'}</strong><p class="muted">${pending.size ? 'Saved on the server and waiting for an ESP download.' : 'No configuration changes are pending delivery.'}</p></div><div class="summary-actions"><button id="undo-config" type="button" ${m.delivery.configCurrent ? 'disabled' : ''}>Undo pending changes</button><span class="status ${pending.size ? 'status-delayed' : ''}">${pending.size ? 'Pending' : 'Delivered'}</span></div></div>
@@ -253,7 +254,7 @@ function renderConfig() {
 function configInput(event) {
   const input = event.target.closest('[data-config-path]'); if (!input) return;
   const original = getPath(state.management.config, input.dataset.configPath);
-  const value = input.type === 'checkbox' ? input.checked : typeof original === 'number' ? Number(input.value) : input.value;
+  const value = input.type === 'checkbox' ? input.checked : input.type === 'number' ? Number(input.value) : input.value;
   setPath(state.configDraft, input.dataset.configPath, value);
   sessionStorage.setItem(managementStorage.draft, JSON.stringify({ revision: state.management.revisions.config, config: state.configDraft }));
   const unsaved = !sameValue(state.configDraft, state.management.config);
