@@ -218,7 +218,7 @@ function configField(path, value, pendingPaths) {
   if (typeof value === 'boolean') input = `<input data-config-path="${path}" type="checkbox" ${value ? 'checked' : ''} ${disabled ? 'disabled' : ''}>`;
   else if (['watering_threshold', 'wetness_balance'].includes(key)) {
     const percent = Math.round(value * 100);
-    input = `<span class="config-slider"><input data-config-path="${path}" type="range" min="0" max="100" step="1" value="${percent}" aria-valuetext="${percent}%"><output>${percent}%</output></span>`;
+    input = `<span class="config-slider"><input data-config-path="${path}" type="range" style="--slider-fill:${percent}%" min="0" max="100" step="1" value="${percent}" aria-valuetext="${percent}%"><output>${percent}%</output></span>`;
   } else if (typeof value === 'number') {
     const step = key.includes('latitude') || key.includes('longitude') ? '0.000001' : '1';
     input = `<input data-config-path="${path}" type="number" step="${step}" value="${value}" ${disabled ? 'disabled' : ''}>`;
@@ -259,6 +259,7 @@ function configInput(event) {
   const original = getPath(state.management.config, input.dataset.configPath);
   const value = input.type === 'checkbox' ? input.checked : input.type === 'range' ? Number(input.value) / 100 : input.type === 'number' ? Number(input.value) : input.value;
   if (input.type === 'range') {
+    input.style.setProperty('--slider-fill', `${input.value}%`);
     input.nextElementSibling.value = `${input.value}%`;
     input.setAttribute('aria-valuetext', `${input.value}%`);
   }

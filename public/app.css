@@ -73,3 +73,28 @@ input,textarea { width:100%; border:1px solid var(--line); background:#081612; c
 @media(prefers-reduced-motion:no-preference){.metric,.zone-card,.chart-card{animation:rise .45s ease both}@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}}
 
 .config-slider { display:flex; align-items:center; gap:12px; min-height:36px; }.config-slider input[type=range] { flex:1; min-width:0; padding:0; accent-color:var(--green); }.config-slider output { min-width:4ch; text-align:right; color:var(--text); font-variant-numeric:tabular-nums; }
+
+/* Explicit track and handle styling for Chromium, Safari and Firefox. */
+.config-slider input[type=range] {
+  appearance:none; -webkit-appearance:none; height:32px; margin:0;
+  border:0; border-radius:6px; background:transparent; cursor:pointer;
+}
+.config-slider input[type=range]::-webkit-slider-runnable-track {
+  height:10px; border:1px solid #77998c; border-radius:999px;
+  background:linear-gradient(to right,var(--green) 0%,var(--green) var(--slider-fill),#162d24 var(--slider-fill),#162d24 100%);
+}
+.config-slider input[type=range]::-moz-range-track {
+  height:8px; border:1px solid #77998c; border-radius:999px;
+  background:linear-gradient(to right,var(--green) 0%,var(--green) var(--slider-fill),#162d24 var(--slider-fill),#162d24 100%);
+}
+.config-slider input[type=range]::-webkit-slider-thumb {
+  appearance:none; -webkit-appearance:none; width:22px; height:22px; margin-top:-7px;
+  border:3px solid #10271e; border-radius:50%; background:#e8fff0;
+  box-shadow:0 0 0 2px var(--green),0 2px 5px #0008;
+}
+.config-slider input[type=range]::-moz-range-thumb {
+  box-sizing:border-box; width:22px; height:22px;
+  border:3px solid #10271e; border-radius:50%; background:#e8fff0;
+  box-shadow:0 0 0 2px var(--green),0 2px 5px #0008;
+}
+.config-slider input[type=range]:hover { filter:brightness(1.12); }
