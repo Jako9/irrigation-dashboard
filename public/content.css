@@ -5,3 +5,7 @@
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 
 .media img.project-photo{aspect-ratio:auto;height:auto;max-height:640px;object-fit:contain}
+
+/* Interior photos were captured sideways; reserve their rotated landscape bounds. */
+.interior-photo{position:relative;aspect-ratio:16/9}
+.media .interior-photo img.project-photo{position:absolute;left:50%;top:50%;width:56.25%;height:177.777778%;max-height:none;transform:translate(-50%,-50%) rotate(-90deg);object-fit:contain}
