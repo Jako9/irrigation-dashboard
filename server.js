@@ -6,6 +6,7 @@ const path = require('path');
 const crypto = require('crypto');
 const sqlite3 = require('sqlite3');
 const { parseAmazonPrice } = require('./price-utils');
+const { securityHeaders } = require('./security-headers');
 
 const HOST = process.env.DASHBOARD_HOST || '127.0.0.1';
 const PORT = Number(process.env.DASHBOARD_PORT || 8071);
@@ -479,14 +480,6 @@ function rateLimited(ip) {
   }
   entry.count += 1;
   return entry.count > 120;
-}
-
-function securityHeaders(res) {
-  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
-  res.setHeader('Referrer-Policy', 'no-referrer');
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
 }
 
 function decodeJwtPart(value) {
