@@ -282,6 +282,7 @@ const staticFiles = Object.freeze({
   '/images/inside_of_box_close1.jpg': ['images/inside_of_box_close1.jpg', 'image/jpeg', 'public, max-age=3600'],
   '/images/inside_of_box_close2.jpg': ['images/inside_of_box_close2.jpg', 'image/jpeg', 'public, max-age=3600'],
   '/images/inside_of_box_far.jpg': ['images/inside_of_box_far.jpg', 'image/jpeg', 'public, max-age=3600'],
+  '/images/solar_panel.jpg': ['images/solar_panel.jpg', 'image/jpeg', 'public, max-age=3600'],
   '/images/zone1.jpg': ['images/zone1.jpg', 'image/jpeg', 'public, max-age=3600'],
   '/images/zone2.jpg': ['images/zone2.jpg', 'image/jpeg', 'public, max-age=3600'],
   '/images/zone3.jpg': ['images/zone3.jpg', 'image/jpeg', 'public, max-age=3600'],

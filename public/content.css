@@ -9,3 +9,7 @@
 /* Interior photos were captured sideways; reserve their rotated landscape bounds. */
 .interior-photo{position:relative;aspect-ratio:16/9}
 .media .interior-photo img.project-photo{position:absolute;left:50%;top:50%;width:56.25%;height:177.777778%;max-height:none;transform:translate(-50%,-50%) rotate(-90deg);object-fit:contain}
+
+/* Keep the sideways solar photo fully visible in its landscape frame. */
+.solar-photo{position:relative;aspect-ratio:16/9;overflow:hidden}
+.media .solar-photo img.project-photo{position:absolute;left:50%;top:50%;width:56.25%;height:177.777778%;max-height:none;transform:translate(-50%,-50%) rotate(90deg);object-fit:contain}
